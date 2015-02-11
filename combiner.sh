@@ -86,7 +86,9 @@ function processNodeForSvg(n, depth) {
 	if (n.val.trim() != "") {
 		rv += ">" + n.val + "</" + n.name + ">\n";
 	} else {
-		rv += (goingDeeper ? ">" : "/>") + "\n";
+		if (depth > 1) {
+			rv += (goingDeeper ? ">" : "/>") + "\n";
+		}
 
 		if (goingDeeper) {
 			var children = n.children;
