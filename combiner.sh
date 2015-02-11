@@ -126,8 +126,8 @@ try {
 
 					manualXml += processNodeForSvg(document, 1);
 
-					var usage = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + outputSvgFile + "#" + symbolName + "\"/>";
-					var usageAlt = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + outputSvgFile + "#" + symbolName + "Alt\"/>";
+					var usage = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + outputSvgFile + "#" + symbolName + "\"/></svg>";
+					var usageAlt = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + outputSvgFile + "#" + symbolName + "Alt\"/></svg>";
 					manualHtml += "<tr><td>" + symbolName + "</td><td>" + usage + "</td><td style='color:purple'>" + usage + "</td><td>" + usageAlt + "</td></tr>";
 
 					manualXml += "\t\t</symbol>\n";
