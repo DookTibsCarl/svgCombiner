@@ -7,26 +7,41 @@
  * "npm install" should install all dependencies.
  * 
  * dependencies:
- *		Node.js
- * 		xmldoc (https://github.com/nfarina/xmldoc); "npm install xmldoc" to install
- *		optimist (https://github.com/substack/node-optimist); "npm install optimist" to install
+ *		+ Node.js
+ *
+ *		+ ImageMagick
+ *
+ *		+ Node libraries (running "npm install" should grab all these
+ *			+ xmldoc (https://github.com/nfarina/xmldoc)
+ *			+ optimist (https://github.com/substack/node-optimist)
+ *			+ exec-sync (https://www.npmjs.com/package/exec-sync)
  */
 console.log("Carleton SVG Combiner v0.1a");
 
 // pull in external libraries
 try {
 	var argv = require('optimist')
-		// .usage('Usage: $0 -dir [DIRECTORY_CONTAINING_SVGS] -output [OUTPUT_FILEBASE] -c')
-		.describe('dir', 'directory containing svg files')
-		.describe('output', 'base filename that will be used to generate both svg and html example files')
+		.describe('inputDir', 'directory containing svg files')
+		.describe('outputDir', 'directory to place output files')
+		.describe('basename', 'base filename that will be used to generate both svg and html example files')
 		.describe('c', 'if present, \'fill="currentColor"\' will be added to all svg nodes')
-		.demand(['dir', 'output'])
+		.demand(['inputDir', 'outputDir', 'basename'])
 		.argv;
 	var fs = require('fs');
 	var xmldoc = require('xmldoc');
+	var execSync = require('exec-sync');
 } catch (e) {
 	console.log("Error loading dependencies; did you run 'npm install'?");
 	return;
+}
+
+try {
+	execSync("convert -version");
+} catch (e) {
+	if (e.toString().indexOf("command not found") > 0) {
+		console.log("ImageMagick does not appear to be installed; aborting");
+		return;
+	}
 }
 
 String.prototype.endsWith = function(suffix) { return this.indexOf(suffix, this.length - suffix.length) !== -1; };
@@ -34,9 +49,12 @@ String.prototype.endsWith = function(suffix) { return this.indexOf(suffix, this.
 var manualXml = "<?xml version=\"1.0\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n\t<defs>\n";
 var manualHtml = "";
 
-var dirToCheck = argv.dir;
-var outputSvgFile = argv.output + ".svg";
-var outputHtmlFile = argv.output + ".html";
+var dirToCheck = argv.inputDir;
+var outputDir = argv.outputDir;
+
+var outputSvgFile = outputDir + "/" + argv.basename + ".svg";
+var relativeSvgPath = argv.basename + ".svg";
+var outputHtmlFile = outputDir + "/" + argv.basename + ".html";
 
 function writeFile(filename, contents) {
 	console.log("Generating output file '" + filename + "'...");
@@ -116,6 +134,21 @@ try {
 			var symbolName = f.substring(0, f.indexOf(".svg"));
 
 			try {
+				console.log("\tgenerating png's...");
+				var cmd = "convert -background transparent -threshold 99% " + dirToCheck + "/" + f + " " + outputDir + "/" + symbolName + ".png";
+				execSync(cmd);
+				
+
+				// doing it this way fails for items that don't ahve a color set (the ones that can't be tinted without -c)
+				// cmd = "convert -background transparent -threshold 0% " + dirToCheck + "/" + f + " " + outputDir + "/" + symbolName + "Alt.png";
+				cmd = "convert " + outputDir + "/" + symbolName + ".png -fuzz 95% -fill white -opaque black " + outputDir + "/" + symbolName + "Alt.png";
+				execSync(cmd);
+			} catch (e) {
+				console.log("error generating png with command [" + cmd + "]: [" + e + "]");
+			}
+
+			try {
+				console.log("\tparsing xml...");
 				fileData = fs.readFileSync(dirToCheck + "/" + f);
 
 				if (fileData) {
@@ -126,12 +159,20 @@ try {
 
 					manualXml += processNodeForSvg(document, 1);
 
-					var usage = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + outputSvgFile + "#" + symbolName + "\"/></svg>";
-					var usageAlt = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + outputSvgFile + "#" + symbolName + "Alt\"/></svg>";
-					manualHtml += "<tr><td>" + symbolName + "</td><td>" + usage + "</td><td style='color:purple'>" + usage + "</td><td>" + usageAlt + "</td></tr>";
+					var usage = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + relativeSvgPath + "#" + symbolName + "\"/></svg>";
+					var usageAlt = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + relativeSvgPath + "#" + symbolName + "Alt\"/></svg>";
+					manualHtml += "<tr>" +
+										"<td>" + symbolName + "</td>" +
+										"<td>" + usage + "</td>" +
+										"<td class='tinted'>" + usage + "</td>" +
+										"<td>" + usageAlt + "</td>" +
+										"<td class='tinted'>" + usageAlt + "</td>" +
+										"<td>" + "<img src='" + symbolName + ".png'></td>" +
+										"<td>" + "<img src='" + symbolName + "Alt.png'></td>" +
+									"</tr>";
 
 					manualXml += "\t\t</symbol>\n";
-					manualXml += "\t\t<symbol id=\"" + symbolName + "Alt\"><svg><use xlink:href=\"" + outputSvgFile + "#" + symbolName + "\"/></svg></symbol>\n";
+					manualXml += "\t\t<symbol id=\"" + symbolName + "Alt\"><svg><use xlink:href=\"" + relativeSvgPath + "#" + symbolName + "\"/></svg></symbol>\n";
 				}
 			} catch (e) {
 				throw err;
@@ -150,7 +191,7 @@ manualXml += "\t</defs>\n</svg>";
 // console.log("--- OUTPUT ---");
 // console.log(manualXml);
 
-manualHtml = "<html>\n<head>\n<meta http-equiv=\"X-UA-Compatible\" content=\"UE=Edge\">\n<script src=\"svg4everybody.ie8.min.js\"></script>\n</head>\n<body>\n<H2>Sample Usage</H2><table border=1 width=100%><tr><th>symbol name</th><th>basic</th><th>styled with color=purple<br>(try running again with -c if not getting colors you expect)</th><th>alternate</th></tr>" + manualHtml + "\n</table></body>\n</html>";
+manualHtml = "<html>\n<head>\n<style>.tinted { color: purple }\ntd { background-color: lightgrey; }</style><meta http-equiv=\"X-UA-Compatible\" content=\"UE=Edge\">\n<script src=\"svg4everybody.ie8.min.js\"></script>\n</head>\n<body>\n<H2>Confirmation / Sample Page</H2><table border=1 width=100%><tr><th>symbol name</th><th>basic svg</th><th>basic svg styled with color=purple<br>(try running again with -c if not getting colors you expect)</th><th>alternate svg</th><th>alternate svg styled with color=purple</th><th>basic png for ie8 fallback</th><th>alt png for ie8 fallback</th></tr>" + manualHtml + "\n</table></body>\n</html>";
 
 writeFile(outputSvgFile, manualXml);
 writeFile(outputHtmlFile, manualHtml);
