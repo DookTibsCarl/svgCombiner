@@ -24,6 +24,7 @@ try {
 		.describe('inputDir', 'directory containing svg files')
 		.describe('outputDir', 'directory to place output files')
 		.describe('basename', 'base filename that will be used to generate both svg and html example files')
+		.describe('dims', 'if present, svgs will be scaled to this dimension. Ex: "--dims 100x100"')
 		.describe('c', 'if present, \'fill="currentColor"\' will be added to all svg nodes')
 		.demand(['inputDir', 'outputDir', 'basename'])
 		.argv;
@@ -135,7 +136,8 @@ try {
 
 			try {
 				console.log("\tgenerating png's...");
-				var cmd = "convert -background transparent -threshold 99% " + dirToCheck + "/" + f + " " + outputDir + "/" + symbolName + ".png";
+				var scaleCmd = argv.dims == undefined ? "" : "-resize " + argv.dims + " ";
+				var cmd = "convert " + scaleCmd + "-background transparent -threshold 99% " + dirToCheck + "/" + f + " " + outputDir + "/" + symbolName + ".png";
 				execSync(cmd);
 				
 
