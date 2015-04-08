@@ -25,6 +25,7 @@ try {
 		.describe('outputDir', 'directory to place output files')
 		.describe('basename', 'base filename that will be used to generate both svg and html example files')
 		.describe('dims', 'if present, svgs will be scaled to this dimension. Ex: "--dims 100x100"')
+		.describe('p', 'if present, svgs will be padded out to the dimensions specified in dims (has no effect if dims omitted)')
 		.describe('c', 'if present, \'fill="currentColor"\' will be added to all svg nodes')
 		.demand(['inputDir', 'outputDir', 'basename'])
 		.argv;
@@ -49,6 +50,15 @@ String.prototype.endsWith = function(suffix) { return this.indexOf(suffix, this.
 
 var manualXml = "<?xml version=\"1.0\"?>\n<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n\t<defs>\n";
 var manualHtml = "";
+
+// on some browsers this apepars to break things? who knows.
+/*
+var posterity = "";
+for (var i = 2 ; i < process.argv.length ; i++) {
+	posterity += (posterity == "" ? "combiner.sh " : " ") + process.argv[i];
+}
+manualXml += "<!--\nThis SVG document was programmatically generated at " + (new Date()) + " with the following command:\n" + posterity + "\n-->\n";
+*/
 
 var dirToCheck = argv.inputDir;
 var outputDir = argv.outputDir;
@@ -136,7 +146,11 @@ try {
 
 			try {
 				console.log("\tgenerating png's...");
+				
+				// see http://www.imagemagick.org/Usage/crop/#extent
 				var scaleCmd = argv.dims == undefined ? "" : "-resize " + argv.dims + " ";
+				if (scaleCmd != "" && argv.p) { scaleCmd += "-extent " + argv.dims + " -gravity center "; }
+
 				var cmd = "convert " + scaleCmd + "-background transparent -threshold 99% " + dirToCheck + "/" + f + " " + outputDir + "/" + relativeSvgPath + "." + symbolName + ".png";
 				execSync(cmd);
 				
@@ -169,8 +183,8 @@ try {
 										"<td class='tinted'>" + usage + "</td>" +
 										"<td>" + usageAlt + "</td>" +
 										"<td class='tinted'>" + usageAlt + "</td>" +
-										"<td>" + "<img src='" + symbolName + ".png'></td>" +
-										"<td>" + "<img src='" + symbolName + "Alt.png'></td>" +
+										"<td>" + "<img src='" + relativeSvgPath + "." + symbolName + ".png'></td>" +
+										"<td>" + "<img src='" + relativeSvgPath + "." + symbolName + "Alt.png'></td>" +
 									"</tr>";
 
 					manualXml += "\t\t</symbol>\n";
