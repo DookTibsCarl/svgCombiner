@@ -137,13 +137,13 @@ try {
 			try {
 				console.log("\tgenerating png's...");
 				var scaleCmd = argv.dims == undefined ? "" : "-resize " + argv.dims + " ";
-				var cmd = "convert " + scaleCmd + "-background transparent -threshold 99% " + dirToCheck + "/" + f + " " + outputDir + "/" + symbolName + ".png";
+				var cmd = "convert " + scaleCmd + "-background transparent -threshold 99% " + dirToCheck + "/" + f + " " + outputDir + "/" + relativeSvgPath + "." + symbolName + ".png";
 				execSync(cmd);
 				
 
 				// doing it this way fails for items that don't ahve a color set (the ones that can't be tinted without -c)
 				// cmd = "convert -background transparent -threshold 0% " + dirToCheck + "/" + f + " " + outputDir + "/" + symbolName + "Alt.png";
-				cmd = "convert " + outputDir + "/" + symbolName + ".png -fuzz 95% -fill white -opaque black " + outputDir + "/" + symbolName + "Alt.png";
+				cmd = "convert " + outputDir + "/" + relativeSvgPath + "." + symbolName + ".png -fuzz 95% -fill white -opaque black " + outputDir + "/" + relativeSvgPath + "." + symbolName + "Alt.png";
 				execSync(cmd);
 			} catch (e) {
 				console.log("error generating png with command [" + cmd + "]: [" + e + "]");
