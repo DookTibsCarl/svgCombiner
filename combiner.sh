@@ -170,10 +170,10 @@ try {
 				if (fileData) {
 					var document = new xmldoc.XmlDocument(fileData.toString('utf8'));
 
-					manualXml += "\t\t<symbol id=\"" + symbolName + "\" role=\"img\" viewBox=\"" + document.attr.viewBox + "\">\n";
-					manualXml += "\t\t\t<title>" + symbolName + " icon</title>\n";
+					var symbolXml = "\t\t<symbol id=\"" + symbolName + "\" role=\"img\" viewBox=\"" + document.attr.viewBox + "\">\n";
+					symbolXml += "\t\t\t<title>" + symbolName + " icon</title>\n";
 
-					manualXml += processNodeForSvg(document, 1);
+					symbolXml += processNodeForSvg(document, 1);
 
 					var usage = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + relativeSvgPath + "#" + symbolName + "\"/></svg>";
 					var usageAlt = "<svg title=\"" + symbolName + " icon\"><use xlink:href=\"" + relativeSvgPath + "#" + symbolName + "Alt\"/></svg>";
@@ -187,8 +187,11 @@ try {
 										"<td>" + "<img src='" + relativeSvgPath + "." + symbolName + "Alt.png'></td>" +
 									"</tr>";
 
-					manualXml += "\t\t</symbol>\n";
-					manualXml += "\t\t<symbol id=\"" + symbolName + "Alt\"><svg><use xlink:href=\"" + relativeSvgPath + "#" + symbolName + "\"/></svg></symbol>\n";
+					symbolXml += "\t\t</symbol>\n";
+					// manualXml += "\t\t<symbol id=\"" + symbolName + "Alt\"><svg><use xlink:href=\"" + relativeSvgPath + "#" + symbolName + "\"/></svg></symbol>\n";
+
+					manualXml += symbolXml;
+					manualXml += symbolXml.replace(/id="(.*)" role/, 'id="\$1Alt" role');
 				}
 			} catch (e) {
 				throw err;
