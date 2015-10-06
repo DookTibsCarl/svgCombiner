@@ -4,7 +4,7 @@
  * Utility script that takes individual svg files and combines them into a single file. viewBox is moved from
  * top-level svg element into the symbol definition. Alternate symbols also generated (for IE6-8).
  *
- * "npm install" should install all dependencies.
+ * "npm install" should install all Node dependencies (not ImageMagick).
  * 
  * dependencies:
  *		+ Node.js
