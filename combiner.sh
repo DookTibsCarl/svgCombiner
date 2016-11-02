@@ -14,7 +14,7 @@
  *		+ Node libraries (running "npm install" should grab all these
  *			+ xmldoc (https://github.com/nfarina/xmldoc)
  *			+ optimist (https://github.com/substack/node-optimist)
- *			+ exec-sync (https://www.npmjs.com/package/exec-sync)
+ *			+ sync-exec (https://www.npmjs.com/package/sync-exec)
  */
 console.log("Carleton SVG Combiner v0.1a");
 
@@ -31,7 +31,7 @@ try {
 		.argv;
 	var fs = require('fs');
 	var xmldoc = require('xmldoc');
-	var execSync = require('exec-sync');
+	var execSync = require('sync-exec');
 } catch (e) {
 	console.log("Error loading dependencies; did you run 'npm install'?");
 	return;

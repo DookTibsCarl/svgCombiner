@@ -6,7 +6,7 @@
   "dependencies": {
     "optimist": "~0.6.1",
     "xmldoc": "~0.3.0",
-	"exec-sync": "~0.1.6"
+	"sync-exec": "~0.6.2"
   },
   "devDependencies": {},
   "scripts": {
